@@ -1,9 +1,8 @@
 import streamlit as st
-import openpnm as op
-import matplotlib.pyplot as plt
-from copy import copy
-from scipy import constants as c
 import numpy as np
+import matplotlib.pyplot as plt
+import scipy.optimize as spop
+from scipy import constants as c
 
 
 state = st.session_state
@@ -116,7 +115,7 @@ with tabs[2]:
     cols1 = st.columns(2)
     L_PEM = cols1[0].number_input(
         label='PEM Thickness [um]',
-        value=300,
+        value=50,
         step=5,
         min_value=10,
         max_value=500,
@@ -133,7 +132,7 @@ with tabs[3]:
     cols1 = st.columns(2)
     io = cols1[0].number_input(
         label='Exchange Current Density [A/m2]',
-        value=1.0,
+        value=1e-3,
         step=0.1,
         min_value=1.0e-5,
         max_value=1.0e5,
@@ -177,8 +176,13 @@ def find_eta(E_cell, eta=None):
         eta_calc.append(calc_eta(E_cell=E_cell, eta_guess=eta_guess[i]))
         # if m**2 < 1e-10:
             # break
-
     return eta_calc[-1]
+
+
+def eta_error(eta, E_cell):
+    eta_calc = calc_eta(E_cell=E_cell, eta_guess=eta)
+    error = (eta_calc - eta)**2
+    return error
 
 
 def calc_eta(E_cell, eta_guess):
@@ -198,10 +202,10 @@ def calc_i(E_cell, eta):
     return i
 
 
-E_cell = np.arange(1.2, 0.0, -0.02)
+E_cell = np.arange(1.2, 0.0, -0.05)
 i_cell = []
 for E in E_cell:
-    eta = find_eta(E_cell=E)
+    eta = spop.fmin(func=eta_error, x0=-0.1, args=(E, ))
     i = calc_i(E_cell=E, eta=eta)
     i_cell.append(i)
 
