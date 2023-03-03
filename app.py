@@ -197,9 +197,8 @@ def calc_i(E_cell, eta):
     return i
 
 
-E_cell = np.arange(1.2, 0.0, -0.05)
 i_cell = []
-for E in E_cell:
+for E in np.arange(1.2, 0.0, -0.05):
     eta = spop.fmin(func=eta_error, x0=-0.1, args=(E, ))
     i = calc_i(E_cell=E, eta=eta)
     i_cell.append(i)
@@ -209,7 +208,7 @@ tabs = st.tabs(["Polarization Curve", "Voltage Profile", "Oxygen Profile"])
 
 with tabs[0]:
     fig, ax = plt.subplots()
-    ax.plot(np.array(i_cell, dtype=float), np.array(E_cell, dtype=float), 'b-o')
+    ax.plot(np.array(i_cell, dtype=float), np.arange(1.2, 0.0, -0.05), 'b-o')
     ax.set_xlabel('Current Density [$A/m^2$]')
     ax.set_ylabel('Cell Voltage [$V$]')
     st.pyplot(fig)
@@ -222,18 +221,27 @@ with tabs[1]:
         min_value=0.0,
         max_value=1.22,
     )
-    eta = spop.fmin(func=eta_error, x0=-0.1, args=(E, ))
+    eta = spop.fmin(func=eta_error, x0=-0.1, args=(E, ))[0]
     i = calc_i(E_cell=E, eta=eta)
     phi_e = E
     phi_H_calc = 0 - i*(L_PEM)/sigma
 
     # Plot voltage profile
     fig, ax = plt.subplots()
-    ax.plot(np.array([0.0, L_PEM*1e6], dtype=float), np.array([0.0, phi_H_calc], dtype=float), 'b-o')
-    ax.plot(np.array([L_PEM*1e6, L_PEM*1e6], dtype=float), np.array([phi_H_calc, phi_e], dtype=float), 'r-o')
-    ax.plot(np.array([L_PEM*1e6, L_PEM*1e6 + L_GDL*1e6], dtype=float), np.array([phi_e, phi_e], dtype=float), 'g-o')
-    ax.plot(np.array([0.0, L_PEM*1e6 + L_GDL*1e6], dtype=float), np.array([1.22, 1.22], dtype=float), 'm--o')
-    ax.set_xlabel('Distance From Anode CL [$\mu m$]')
+    st.text(eta)
+    ax.plot(np.array([0.0, L_PEM*1e6], dtype=float),
+            np.array([0.0, phi_H_calc], dtype=float),
+            'b-o')
+    ax.plot(np.array([L_PEM*1e6, L_PEM*1e6], dtype=float),
+            np.array([phi_H_calc, phi_e], dtype=float),
+            'r-o')
+    ax.plot(np.array([L_PEM*1e6, L_PEM*1e6 + L_GDL*1e6], dtype=float),
+            np.array([phi_e, phi_e], dtype=float),
+            'g-o')
+    ax.plot(np.array([0.0, L_PEM*1e6 + L_GDL*1e6], dtype=float),
+            np.array([1.22, 1.22], dtype=float),
+            'm--o')
+    ax.set_xlabel(r'Distance From Anode CL [$\mu m$]')
     ax.set_ylabel('Cell Voltage [$V$]')
     ax.set_ylim([-1.0, 1.5])
     st.pyplot(fig)
@@ -247,17 +255,23 @@ with tabs[2]:
         min_value=0.0,
         max_value=1.22,
     )
-    eta = spop.fmin(func=eta_error, x0=-0.1, args=(E, ))
+    eta = spop.fmin(func=eta_error, x0=-0.1, args=(E, ))[0]
     k = io*np.exp(-4*96487*(1-alpha)*eta/(8.314*Tcat))
     g = 4*96487*DAB*(e/taux)/(L_GDL)
     CO2_CL = g*CO2cat/(g + k)
 
     # Plot voltage profile
     fig, ax = plt.subplots()
-    ax.plot(np.array([0.0, L_PEM*1e6], dtype=float), np.array([0.0, 0.0], dtype=float), 'b-o')
-    ax.plot(np.array([L_PEM*1e6, L_PEM*1e6 + L_GDL*1e6], dtype=float), np.array([CO2_CL, CO2cat], dtype=float), 'g-o')
-    ax.plot(np.array([0.0, L_PEM*1e6 + L_GDL*1e6], dtype=float), np.array([0.21*Cgas, 0.21*Cgas], dtype=float), 'm--o')
-    ax.set_xlabel('Distance From Anode CL [$\mu m$]')
+    ax.plot(np.array([0.0, L_PEM*1e6], dtype=float),
+            np.array([0.0, 0.0], dtype=float),
+            'b-o')
+    ax.plot(np.array([L_PEM*1e6, L_PEM*1e6 + L_GDL*1e6], dtype=float),
+            np.array([CO2_CL, CO2cat], dtype=float),
+            'g-o')
+    ax.plot(np.array([0.0, L_PEM*1e6 + L_GDL*1e6], dtype=float),
+            np.array([0.21*Cgas, 0.21*Cgas], dtype=float),
+            'm--o')
+    ax.set_xlabel(r'Distance From Anode CL [$\mu m$]')
     ax.set_ylabel('Oxygen Concentration [$mol/m^3$]')
     # ax.set_ylim([-1.0, 1.5])
     st.pyplot(fig)
