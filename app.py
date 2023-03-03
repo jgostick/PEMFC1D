@@ -209,7 +209,7 @@ tabs = st.tabs(["Polarization Curve", "Voltage Profile", "Oxygen Profile"])
 
 with tabs[0]:
     fig, ax = plt.subplots()
-    ax.plot(np.array(i_cell), np.array(E_cell), 'b-o')
+    ax.plot(np.array(i_cell, dtype=float), np.array(E_cell, dtype=float), 'b-o')
     ax.set_xlabel('Current Density [$A/m^2$]')
     ax.set_ylabel('Cell Voltage [$V$]')
     st.pyplot(fig)
@@ -229,10 +229,10 @@ with tabs[1]:
 
     # Plot voltage profile
     fig, ax = plt.subplots()
-    ax.plot(np.array([0.0, L_PEM*1e6]), np.array([0.0, phi_H_calc]), 'b-o')
-    ax.plot(np.array([L_PEM*1e6, L_PEM*1e6]), np.array([phi_H_calc, phi_e]), 'r-o')
-    ax.plot(np.array([L_PEM*1e6, L_PEM*1e6 + L_GDL*1e6]), np.array([phi_e, phi_e]), 'g-o')
-    ax.plot(np.array([0.0, L_PEM*1e6 + L_GDL*1e6]), np.array([1.22, 1.22]), 'm--o')
+    ax.plot(np.array([0.0, L_PEM*1e6], dtype=float), np.array([0.0, phi_H_calc], dtype=float), 'b-o')
+    ax.plot(np.array([L_PEM*1e6, L_PEM*1e6], dtype=float), np.array([phi_H_calc, phi_e], dtype=float), 'r-o')
+    ax.plot(np.array([L_PEM*1e6, L_PEM*1e6 + L_GDL*1e6], dtype=float), np.array([phi_e, phi_e], dtype=float), 'g-o')
+    ax.plot(np.array([0.0, L_PEM*1e6 + L_GDL*1e6], dtype=float), np.array([1.22, 1.22], dtype=float), 'm--o')
     ax.set_xlabel('Distance From Anode CL [$\mu m$]')
     ax.set_ylabel('Cell Voltage [$V$]')
     ax.set_ylim([-1.0, 1.5])
@@ -254,9 +254,9 @@ with tabs[2]:
 
     # Plot voltage profile
     fig, ax = plt.subplots()
-    ax.plot(np.array([0.0, L_PEM*1e6]), np.array([0.0, 0.0]), 'b-o')
-    ax.plot(np.array([L_PEM*1e6, L_PEM*1e6 + L_GDL*1e6]), np.array([CO2_CL, CO2cat]), 'g-o')
-    ax.plot(np.array([0.0, L_PEM*1e6 + L_GDL*1e6]), np.array([0.21*Cgas, 0.21*Cgas]), 'm--o')
+    ax.plot(np.array([0.0, L_PEM*1e6], dtype=float), np.array([0.0, 0.0], dtype=float), 'b-o')
+    ax.plot(np.array([L_PEM*1e6, L_PEM*1e6 + L_GDL*1e6], dtype=float), np.array([CO2_CL, CO2cat], dtype=float), 'g-o')
+    ax.plot(np.array([0.0, L_PEM*1e6 + L_GDL*1e6], dtype=float), np.array([0.21*Cgas, 0.21*Cgas], dtype=float), 'm--o')
     ax.set_xlabel('Distance From Anode CL [$\mu m$]')
     ax.set_ylabel('Oxygen Concentration [$mol/m^3$]')
     # ax.set_ylim([-1.0, 1.5])
