@@ -9,6 +9,8 @@ state = st.session_state
 if not hasattr(state, 'CO2cat'):
     state.CO2cat = 1.0
 
+st.title("PEMFC Simulator :zap:")
+st.subheader(":chart_with_downwards_trend: First Principles, 1D Model")
 
 tabs = st.tabs(["Channel", "GDL", "Membrane", "Catalyst"])
 
@@ -231,7 +233,7 @@ with tabs[1]:
     ax.plot([L_PEM*1e6, L_PEM*1e6], [phi_H_calc, phi_e], 'r-o')
     ax.plot([L_PEM*1e6, L_PEM*1e6 + L_GDL*1e6], [phi_e, phi_e], 'g-o')
     ax.plot([0, L_PEM*1e6 + L_GDL*1e6], [1.22, 1.22], 'm--o')
-    ax.set_xlabel('Distance From Anode CL [um]')
+    ax.set_xlabel('Distance From Anode CL [$\mu m$]')
     ax.set_ylabel('Cell Voltage [$V$]')
     ax.set_ylim([-1.0, 1.5])
     st.pyplot(fig)
@@ -255,8 +257,8 @@ with tabs[2]:
     ax.plot([0, L_PEM*1e6], [0, 0], 'b-o')
     ax.plot([L_PEM*1e6, L_PEM*1e6 + L_GDL*1e6], [CO2_CL, CO2cat], 'g-o')
     ax.plot([0, L_PEM*1e6 + L_GDL*1e6], [0.21*Cgas, 0.21*Cgas], 'm--o')
-    ax.set_xlabel('Distance From Anode CL [um]')
-    ax.set_ylabel('Cell Voltage [$V$]')
+    ax.set_xlabel('Distance From Anode CL [$\mu m$]')
+    ax.set_ylabel('Oxygen Concentration [$mol/m^3$]')
     # ax.set_ylim([-1.0, 1.5])
     st.pyplot(fig)
 
