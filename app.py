@@ -70,6 +70,14 @@ with tabs[0]:
 
 
 with tabs[1]:
+    with st.expander('Transport through the GDL is governed by Fick\'s law:'):
+        st.latex(r'n_{O_2} = \frac{\varepsilon}{\tau} \frac{D_{AB}}{L_{GDL}} (C_{O_2,CL} - C_{O_2,Ch})')
+        st.markdown('where:')
+        st.markdown(r" - $$ \varepsilon $$ is the porosity")
+        st.markdown(r" - $$ \tau $$ is the tortuosity")
+        st.markdown(r" - $$ L_{GDL} $$ is the thickness of the GDL [m]")
+        st.markdown(r" - $$ D_{AB} $$ is the diffusion coefficient of $O_2$ in air [$m^2/s$]")
+        st.markdown(r" - $$ C_{O_2} $$ is the concentration of oxygen [$mol/m^3$]")
     cols1 = st.columns(2)
     L_GDL = cols1[0].number_input(
         label='GDL Thickness [um]',
@@ -112,6 +120,12 @@ with tabs[1]:
     )
 
 with tabs[2]:
+    with st.expander("Transport through the membrane is governed by Ohm's law:"):
+        st.latex(r'i = \frac{\sigma}{L_{PEM}} (\phi_{H^+,An} - \phi_{H^+,Cat})')
+        st.markdown('where:')
+        st.markdown(r" - $$ \sigma $$ is the ionic conductivity [S/m]")
+        st.markdown(r" - $$ L_{PEM} $$ is the thickness of the membrane [m]")
+        st.markdown(r" - $$ \phi_{H^+} $$ is the potential in the ionmer [V]")
     cols1 = st.columns(2)
     L_PEM = cols1[0].number_input(
         label='PEM Thickness [um]',
@@ -122,13 +136,18 @@ with tabs[2]:
     )*1e-6
     sigma = cols1[0].slider(
         label='Ionic Conductivity',
-        value=10.0,
+        value=5.0,
         step=0.1,
         min_value=0.0010,
-        max_value=100.0,
+        max_value=20.0,
     )
 
 with tabs[3]:
+    with st.expander("Electrochemical kinetics are described by the Tafel equation"):
+        st.latex(r'i = i_o \cdot C_{A,CL} exp \bigg[-\frac{(1 - \alpha)zF}{RT} \eta \bigg]')
+        st.markdown(r" - $$ \alpha $$ is the Transfer Coefficient")
+        st.markdown(r" - $$ i_o $$ is the Exhange Current Density")
+        st.markdown(r" - $$ z $$ is the number of electrons per molecule")
     cols1 = st.columns(2)
     io = cols1[0].number_input(
         label='Exchange Current Density [A/m2]',
@@ -151,34 +170,8 @@ with tabs[3]:
         disabled=True,
     )
 
-st.markdown("---")
-tabs = st.tabs(["Polarization Curve", "Voltage Profiles"])
-
 
 # %%
-def find_eta(E_cell, eta=None):
-    if eta is None:
-        eta = E_cell - 1.22
-    # Find slope of error at current guess
-    eta_calc = []
-    eta_guess = []
-    eta_guess.append(eta*0.99)
-    eta_calc.append(calc_eta(E_cell=E_cell, eta_guess=eta_guess[0]))
-    eta_guess.append(eta*1.01)
-    eta_calc.append(calc_eta(E_cell=E_cell, eta_guess=eta_guess[0]))
-
-    for i in range(1, 10):
-        # Use Newton's method to guess next eta
-        err_1 = eta_guess[i-1] - eta_calc[i-1]
-        err_2 = eta_guess[i] - eta_calc[i]
-        m = (err_2 - err_1)/(eta_guess[i] - eta_guess[i-1])
-        eta_guess.append((0 - err_2)/m + eta_guess[i])
-        eta_calc.append(calc_eta(E_cell=E_cell, eta_guess=eta_guess[i]))
-        # if m**2 < 1e-10:
-            # break
-    return eta_calc[-1]
-
-
 def eta_error(eta, E_cell):
     eta_calc = calc_eta(E_cell=E_cell, eta_guess=eta)
     error = (eta_calc - eta)**2
@@ -209,17 +202,89 @@ for E in E_cell:
     i = calc_i(E_cell=E, eta=eta)
     i_cell.append(i)
 
-fig, ax = plt.subplots()
-ax.plot(i_cell, E_cell, 'b-o')
-tabs[0].pyplot(fig)
+st.markdown("---")
+tabs = st.tabs(["Polarization Curve", "Voltage Profile", "Oxygen Profile"])
+
+with tabs[0]:
+    fig, ax = plt.subplots()
+    ax.plot(i_cell, E_cell, 'b-o')
+    ax.set_xlabel('Current Density [$A/m^2$]')
+    ax.set_ylabel('Cell Voltage [$V$]')
+    st.pyplot(fig)
 
 with tabs[1]:
     E = st.slider(
         label='Cell Voltage',
         value=1.0,
         step=0.05,
-        min_value=0.1,
-        max_value=1.2,
+        min_value=0.0,
+        max_value=1.22,
     )
+    eta = spop.fmin(func=eta_error, x0=-0.1, args=(E, ))
+    i = calc_i(E_cell=E, eta=eta)
+    phi_e = E
+    phi_H_calc = 0 - i*(L_PEM)/sigma
+
+    # Plot voltage profile
+    fig, ax = plt.subplots()
+    ax.plot([0, L_PEM*1e6], [0, phi_H_calc], 'b-o')
+    ax.plot([L_PEM*1e6, L_PEM*1e6], [phi_H_calc, phi_e], 'r-o')
+    ax.plot([L_PEM*1e6, L_PEM*1e6 + L_GDL*1e6], [phi_e, phi_e], 'g-o')
+    ax.plot([0, L_PEM*1e6 + L_GDL*1e6], [1.22, 1.22], 'm--o')
+    ax.set_xlabel('Distance From Anode CL [um]')
+    ax.set_ylabel('Cell Voltage [$V$]')
+    ax.set_ylim([-1.0, 1.5])
+    st.pyplot(fig)
+
+with tabs[2]:
+    E = st.slider(
+        label='Cell Voltage',
+        key='Voltage for O2 tab',
+        value=1.0,
+        step=0.05,
+        min_value=0.0,
+        max_value=1.22,
+    )
+    eta = spop.fmin(func=eta_error, x0=-0.1, args=(E, ))
+    k = io*np.exp(-4*96487*(1-alpha)*eta/(8.314*Tcat))
+    g = 4*96487*DAB*(e/taux)/(L_GDL)
+    CO2_CL = g*CO2cat/(g + k)
+
+    # Plot voltage profile
+    fig, ax = plt.subplots()
+    ax.plot([0, L_PEM*1e6], [0, 0], 'b-o')
+    ax.plot([L_PEM*1e6, L_PEM*1e6 + L_GDL*1e6], [CO2_CL, CO2cat], 'g-o')
+    ax.plot([0, L_PEM*1e6 + L_GDL*1e6], [0.21*Cgas, 0.21*Cgas], 'm--o')
+    ax.set_xlabel('Distance From Anode CL [um]')
+    ax.set_ylabel('Cell Voltage [$V$]')
+    # ax.set_ylim([-1.0, 1.5])
+    st.pyplot(fig)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
